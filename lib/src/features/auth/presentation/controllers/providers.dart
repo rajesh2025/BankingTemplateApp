@@ -1,13 +1,17 @@
-// providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import '../../../../core/network/dio_client.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/usecases/login_usecase.dart';
 import 'auth_controller.dart';
-import 'auth_session_provider.dart';
 
-final baseUrlProvider = Provider<String>((_) => 'https://fab-mock-api.free.beeceptor.com');
+// Reverted to the standard, platform-agnostic provider.
+final secureStorageProvider = Provider((_) => const FlutterSecureStorage());
+
+final baseUrlProvider =
+    Provider<String>((_) => 'https://trustinbank.free.beeceptor.com');
 
 final dioClientProvider = Provider((ref) {
   final baseUrl = ref.watch(baseUrlProvider);
@@ -29,7 +33,8 @@ final loginUseCaseProvider = Provider((ref) {
   return LoginUseCase(repo);
 });
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final loginUseCase = ref.watch(loginUseCaseProvider);
   final storage = ref.read(secureStorageProvider);
   return AuthNotifier(loginUseCase: loginUseCase, storage: storage);

@@ -1,10 +1,9 @@
-// login_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../home/presentation/pages/home_page.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/providers.dart';
-import 'home_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -15,8 +14,12 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtl = TextEditingController(text: 'rajesh@beeceptor.com'); // valid beeceptor email
-  final _passCtl = TextEditingController(text: 'Password@123'); // valid beeceptor password
+  final _emailCtl = TextEditingController(
+    text: 'rajesh@beeceptor.com',
+  ); // valid beeceptor email
+  final _passCtl = TextEditingController(
+    text: 'Password@123',
+  ); // valid beeceptor password
 
   @override
   Widget build(BuildContext context) {
@@ -24,15 +27,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authNotifier = ref.read(authNotifierProvider.notifier);
 
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
-      if (next.token != null) {
+      if (next.profileData?.token != null) {
         // show success
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logged in! Token: ${next.token}')));
-        // navigate to HomePage
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logged in!'),
+          ),
         );
-       } else if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next.error!)));
+        // navigate to HomePage
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      } else if (next.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
       }
     });
 
@@ -51,29 +60,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   TextFormField(
                     controller: _emailCtl,
                     decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Enter email' : null,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter email' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passCtl,
                     decoration: const InputDecoration(labelText: 'Password'),
                     obscureText: true,
-                    validator: (v) => (v == null || v.isEmpty) ? 'Enter password' : null,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter password' : null,
                   ),
                   const SizedBox(height: 20),
-                  authState.loading
+                  authState.isLoading
                       ? const CircularProgressIndicator()
                       : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          authNotifier.login(_emailCtl.text.trim(), _passCtl.text.trim());
-                        }
-                      },
-                      child: const Text('Login'),
-                    ),
-                  ),
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                authNotifier.login(
+                                  _emailCtl.text.trim(),
+                                  _passCtl.text.trim(),
+                                );
+                              }
+                            },
+                            child: const Text('Login'),
+                          ),
+                        ),
                 ],
               ),
             ),

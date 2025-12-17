@@ -1,4 +1,3 @@
-// home_response.dart
 import 'package:json_annotation/json_annotation.dart';
 import 'carousel_card.dart';
 import 'image_card.dart';

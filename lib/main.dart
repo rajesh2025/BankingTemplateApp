@@ -1,14 +1,18 @@
-import 'package:banking_template_app/src/app/app_initializer.dart';
-import 'package:banking_template_app/src/common/splash_screen.dart';
-import 'package:banking_template_app/src/features/auth/presentation/controllers/auth_session_provider.dart';
-import 'package:banking_template_app/src/features/auth/presentation/pages/home_page.dart';
-import 'package:banking_template_app/src/flutter/material.dart';
+import 'package:banking_template_app/src/features/auth/presentation/controllers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'src/app/app_initializer.dart';
+import 'src/common/splash_screen.dart';
+import 'src/features/auth/presentation/controllers/auth_controller.dart';
 import 'src/features/auth/presentation/pages/login_page.dart';
+import 'src/features/home/presentation/pages/home_page.dart';
+import 'src/flutter/material.dart';
 
 void main() async {
+  // Ensure bindings are initialized for platform-specific code.
   WidgetsFlutterBinding.ensureInitialized();
+  // Handle fresh install logic before running the app.
   await AppInitializer.initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -18,21 +22,30 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authSessionProvider);
+    final authState = ref.watch(authNotifierProvider);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       title: 'Banking Template App',
-      home: authState.when(
-          data: (isLoggedIn) {
-        if (isLoggedIn) {
-          return const HomePage();
-        } else {
-          return const LoginPage();
-        }
-      },
-          error: (_, _) => const LoginPage(),
-          loading: () => const SplashScreen()),
+      home: buildHome(authState),
     );
+  }
+
+  Widget buildHome(AuthState authState) {
+    if (authState.isLoading) {
+      return const SplashScreen();
+    }
+
+    if (authState.error != null) {
+     // Optionally, show a dedicated error screen
+      return const LoginPage();
+    }
+
+    if (authState.profileData != null) {
+      return const HomePage();
+    } else {
+      return const LoginPage();
+    }
   }
 }

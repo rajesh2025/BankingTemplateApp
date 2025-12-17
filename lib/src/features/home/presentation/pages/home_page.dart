@@ -1,16 +1,15 @@
-// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import '../../../../app/navigation/model/action_model.dart';
+import '../../../auth/presentation/controllers/providers.dart';
 import '../../data/models/carousel_card.dart';
 import '../../data/models/home_response.dart';
 import '../../data/models/image_card.dart';
-import '../controllers/auth_session_provider.dart';
 import '../controllers/home_controller.dart';
-import '../navigation/action_router.dart';
-import 'login_page.dart';
+import '../../../../app/navigation/action_router.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -38,31 +37,27 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeStateProvider);
+    final authState = ref.watch(authNotifierProvider);
+    final profileImageUrl = authState.profileData?.user.profileImageUrl;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
-          PopupMenuButton<_HomeMenuAction>(
-            onSelected: (action) {
-              switch (action) {
-                case _HomeMenuAction.profile:
-                  _openProfile(context);
-                  break;
-                case _HomeMenuAction.logout:
-                  _confirmLogout(context, ref);
-                  break;
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: _HomeMenuAction.profile,
-                child: Text('Profile'),
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: IconButton(
+              icon: CircleAvatar(
+                backgroundImage: profileImageUrl != null
+                    ? NetworkImage(profileImageUrl)
+                    : null,
+                child: profileImageUrl == null
+                    ? const Icon(Icons.account_circle, size: 32)
+                    : null,
               ),
-              PopupMenuItem(
-                value: _HomeMenuAction.logout,
-                child: Text('Logout'),
-              ),
-            ],
+              onPressed: () => _openProfile(context),
+              tooltip: 'Profile',
+            ),
           ),
         ],
       ),
@@ -311,57 +306,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false, // user must choose
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text(
-            'Are you sure you want to logout?\n\nYou will need to login again to access the app.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Logout'),
-            ),
-          ],
-        );
-      },
-    );
-
-    // ✅ Guard against disposed widget
-    if (!mounted) return;
-
-    if (shouldLogout == true) {
-      await _logout(ref);
-    }
-  }
-
-  Future<void> _logout(WidgetRef ref) async {
-    final storage = ref.read(secureStorageProvider);
-
-    // 1️⃣ Clear secure token
-    await storage.delete(key: authTokenKey);
-
-    // 2️⃣ Navigate to Login & clear back stack
-    if (!mounted) return;
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
-  }
-
   void _openProfile(BuildContext context) {
-    ScaffoldMessenger.of(
+    ActionRouter.handle(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Profile coming soon')));
+      AppAction(type: 'internal', target: 'profile'),
+    );
   }
 }
 
@@ -461,5 +410,3 @@ class _ImageCard extends StatelessWidget {
     }
   }
 }
-
-enum _HomeMenuAction { profile, logout }

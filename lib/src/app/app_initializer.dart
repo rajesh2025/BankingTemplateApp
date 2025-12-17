@@ -1,26 +1,31 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _installFlagKey = 'app_installed';
+const _installFlagKey = 'hasRunBefore';
 
 class AppInitializer {
   static Future<void> initialize() async {
-    // Only iOS has this issue
-    if (!Platform.isIOS) return;
+    // This check must happen before any Platform-specific code.
+    if (kIsWeb) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final secureStorage = const FlutterSecureStorage();
+    // On iOS and macOS, keychain data can persist across app uninstalls.
+    // This logic clears it on the first run to ensure a clean state.
+    if (Platform.isIOS || Platform.isMacOS) {
+      final prefs = await SharedPreferences.getInstance();
+      final secureStorage = const FlutterSecureStorage();
 
-    final isInstalled = prefs.getBool(_installFlagKey) ?? false;
+      final hasRunBefore = prefs.getBool(_installFlagKey) ?? false;
 
-    if (!isInstalled) {
-      // 🚨 Fresh install detected → clear Keychain
-      await secureStorage.deleteAll();
+      if (!hasRunBefore) {
+        // 🚨 Fresh install detected → clear Keychain
+        await secureStorage.deleteAll();
 
-      // Mark app as installed
-      await prefs.setBool(_installFlagKey, true);
+        // Mark app as having run before
+        await prefs.setBool(_installFlagKey, true);
+      }
     }
   }
 }

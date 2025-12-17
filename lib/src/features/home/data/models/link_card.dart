@@ -1,7 +1,6 @@
-// link_card.dart
 import 'package:json_annotation/json_annotation.dart';
 
-import 'action_model.dart';
+import '../../../../app/navigation/model/action_model.dart';
 
 part 'link_card.g.dart';
 

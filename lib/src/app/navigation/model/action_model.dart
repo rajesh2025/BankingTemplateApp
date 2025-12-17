@@ -4,8 +4,8 @@ part 'action_model.g.dart';
 
 @JsonSerializable()
 class AppAction {
-  final String type; // internal | external
-  final String? target;
+  final String type;   // internal / external
+  final String? target; // logout, profile, promo_details, etc.
   final String? url;
   final String? openIn;
   final Map<String, dynamic>? payload;
